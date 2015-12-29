@@ -108,7 +108,6 @@ var names = _.map(s.data, 'name');
 
 var splitCharts = {} // Name => { svg: d3 , }
 var splitProgressScale = d3.scale.linear().domain([0, 1]).range([sm[3], s.splitWidth - sm[1]]);
-var splitSalaryScale = d3.scale.linear().domain([s.splitMaxSalary, s.splitMinSalary]).range([sm[0], s.splitHeight - sm[2]]);
 
 var splitContainer = $('#split');
 _.each(_.chunk(names, s.splitRowCount), function(rowNames) {
@@ -122,20 +121,25 @@ _.each(_.chunk(names, s.splitRowCount), function(rowNames) {
 
     var svg = d3.select(container[0]).append("svg").attr("width", s.splitWidth).attr("height", s.splitHeight);
 
-    svg.append("g").attr("class", "salary axis").attr("transform", "translate(" + splitProgressScale(0) + ",0)").call(
-      d3.svg.axis().scale(splitSalaryScale).orient("left").ticks(10)
-    );
+    var salaryAxis = svg.append("g").attr("class", "salary axis");
 
-    svg.append("g").attr("class", "progress axis").attr("transform", "translate(0," + splitSalaryScale(s.splitMinSalary) + ")").call(
+    svg.append("g").attr("class", "progress axis").attr("transform", "translate(0," + (s.splitHeight - sm[2]) + ")").call(
       d3.svg.axis().scale(splitProgressScale)
     );
 
+    var targetRef = svg.append("line").attr("class", "split-target-ref")
     var initialSalary = svg.append("circle").attr("r", 5);
     var targetSalary = svg.append("circle").attr("class", "split-target").attr("r", 5);
 
     splitCharts[name] = {
       svg : svg,
       updateTargetSalary: function(data) {
+        var splitSalaryScale = d3.scale.linear().domain([data.myTargetSalary, data.salary]).range([sm[0], s.splitHeight - sm[2]]);
+
+        salaryAxis.attr("transform", "translate(" + splitProgressScale(0) + ",0)").call(
+          d3.svg.axis().scale(splitSalaryScale).orient("left").ticks(10)
+        );
+
         initialSalary
           .attr("cy", splitSalaryScale(data.salary))
           .attr("cx", splitProgressScale(0.0));
@@ -143,6 +147,13 @@ _.each(_.chunk(names, s.splitRowCount), function(rowNames) {
         targetSalary
           .attr("cy", splitSalaryScale(data.myTargetSalary))
           .attr("cx", splitProgressScale(1.0));
+
+        targetRef
+          .attr("x1", splitProgressScale(0.0))
+          .attr("y1", splitSalaryScale(data.salary))
+          .attr("x2", splitProgressScale(1.0))
+          .attr("y2", splitSalaryScale(data.myTargetSalary));
+
       },
     }
   });
