@@ -213,7 +213,15 @@ _.each(names, function(name) {
       updateGraph();
     });
 
-    row.append($("<td>").append(assignmentControl));
+    row.append($("<td>").append(
+      $("<div>").addClass("input-group")
+        .append(assignmentControl)
+        .append($("<span>").addClass("input-group-btn").append(
+          $("<button>").addClass("cpy btn btn-default").attr("type", "button")
+            .html("<i class=\"glyphicon glyphicon-copy\"/>")
+        )
+      )
+    ));
     row.append($("<td>").append(roundResultControl));
 
     assignmentControls.push(assignmentControl);
@@ -231,6 +239,12 @@ _.each(names, function(name) {
       roundResultControls[i].val(d);
     });
   };
+});
+
+new Clipboard("#table .cpy", {
+  text: function(trigger) {
+    return $(trigger.parentNode.previousElementSibling).val();
+  }
 });
 
 var splitCharts = {} // Name => { svg: d3 , }
