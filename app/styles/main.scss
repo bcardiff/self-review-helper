@@ -110,18 +110,63 @@ body {
   }
 }
 
+.split-target-ref {
+  stroke: lightgrey;
+}
+
 .data-my-target-salary, .ref-line-my-target-salary {
   fill: red;
+}
+
+.split-round-result circle {
+  fill: blue;
+}
+
+.data-scaled-target-salary circle, .data-scaled-salary circle {
+  stroke-dasharray: 1,1;
+  fill: none;
+}
+
+.data-scaled-target-salary circle {
+  stroke: red;
+}
+
+.data-scaled-salary circle {
+  stroke: black;
 }
 
 .data-salary {
   cursor: ew-resize;
 }
 
-.data-my-target-salary {
+.data-my-target-salary, .split-round-assignment circle {
   cursor: ns-resize;
 }
 
 .ref-lines {
   stroke: lightgrey;
+}
+
+p.name {
+  text-align: center;
+}
+
+#gapStatus {
+  z-index: 100;
+  right: 15px;
+  position: fixed;
+  top: 15px;
+}
+
+#table table {
+  width: auto;
+
+  td input {
+    width: 84px;
+  }
+}
+
+#state textarea {
+  width: 100%;
+  height: 400px;
 }
