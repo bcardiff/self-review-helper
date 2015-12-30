@@ -17,8 +17,8 @@ var s = {
   maxOrder: 100,
   minSalary: 10000, maxSalary: 30000,
 
-  width:  900,
-  height: 250,
+  width:  1100,
+  height: 550,
 
   splitHeight: 250,
   splitWidth:  400,
@@ -124,6 +124,59 @@ function updateMyTargetSalaryFromLine() {
 
 var names = _.map(s.data, 'name');
 
+var tableControls = {} // Name => { updateGraph: function(data) {...} }
+var table = $("#table table");
+var headerRow = $("<tr>").append($("<th>").append("Nombre"));
+_.each(s.progress, function(d, i) {
+  headerRow.append($("<th>").append("A" + (i+1)));
+  headerRow.append($("<th>").append("R" + (i+1)));
+});
+table.append(headerRow);
+
+_.each(names, function(name) {
+  var obj = {}
+  tableControls[name] = obj;
+
+  var row = $("<tr>");
+  table.append(row);
+  row.append($("<td>").append($("<p>").addClass("form-control-static").text(name)));
+
+  var assignmentControls = [];
+  var roundResultControls = [];
+
+  _.each(s.progress, function(d, i) {
+    var assignmentControl = $("<input>").attr("type", "number").addClass("form-control");
+    var roundResultControl = $("<input>").attr("type", "number").addClass("form-control");
+
+    assignmentControl.change(function(){
+      obj.data.assignment[i] = parseInt(assignmentControl.val());
+      updateGraph();
+    });
+    roundResultControl.change(function(){
+      obj.data.roundResult[i] = parseInt(roundResultControl.val());
+      updateGraph();
+    });
+
+    row.append($("<td>").append(assignmentControl));
+    row.append($("<td>").append(roundResultControl));
+
+    assignmentControls.push(assignmentControl);
+    roundResultControls.push(roundResultControl);
+  });
+
+  obj.updateGraph = function(data) {
+    obj.data = data;
+
+    _.each(data.assignment, function(d, i) {
+      assignmentControls[i].val(d);
+    });
+
+    _.each(data.roundResult, function(d, i) {
+      roundResultControls[i].val(d);
+    });
+  };
+});
+
 var splitCharts = {} // Name => { svg: d3 , }
 var splitProgressScale = d3.scale.linear().domain([0, 1]).range([sm[3], s.splitWidth - sm[1]]);
 
@@ -189,11 +242,11 @@ _.each(_.chunk(names, s.splitRowCount), function(rowNames) {
         .attr("cy", function(d, i) { return obj.splitSalaryScale(obj.baseSalaryForAssignment(data, i) + data.assignment[i]); } )
 
       roundResultSelection
-        .attr("cy", function(d, i) { return obj.splitSalaryScale(obj.baseSalaryForAssignment(data, i-1) + data.roundResult[i]); } )
+        .attr("cy", function(d, i) { return obj.splitSalaryScale(obj.baseSalaryForAssignment(data, i) + data.roundResult[i]); } )
     };
 
     obj.baseSalaryForAssignment = function(data, i) {
-      return data.salary + _.sum(_.slice(data.roundResult, 0, i+1));
+      return data.salary + _.sum(_.slice(data.roundResult, 0, i));
     };
 
   });
@@ -224,6 +277,7 @@ function updateGraph() {
 
   _.each(s.data, function(data) {
     splitCharts[data.name].updateGraph(data);
+    tableControls[data.name].updateGraph(data);
   });
 }
 
