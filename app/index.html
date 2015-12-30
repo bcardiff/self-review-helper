@@ -70,7 +70,10 @@
 
           <div class="tab-pane" id="state">
             <br/>
-            <pre id="status"></pre>
+            <button class="btn btn-default" id="copy-status" data-clipboard-target="#status"> Copy to clipboard </button>
+            <br/>
+
+            <textarea id="status"></textarea>
           </div>
         </div>
       </div>
@@ -97,6 +100,7 @@
     <script src="/bower_components/bootstrap-sass/assets/javascripts/bootstrap/tab.js"></script>
     <script src="/bower_components/d3/d3.js"></script>
     <script src="/bower_components/lodash/lodash.js"></script>
+    <script src="/bower_components/clipboard/dist/clipboard.js"></script>
     <!-- endbuild -->
 
     <!-- build:js scripts/main.js -->

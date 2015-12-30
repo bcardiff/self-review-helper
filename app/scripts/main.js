@@ -1,6 +1,6 @@
 var s = {
   data: [
-    { name: 'John', short: 'JN', salary: 12000, myTargetSalary: 0, order: 70 },
+    { name: 'John', short: 'JN', salary:  8000, myTargetSalary: 0, order: 70, dailyHours: 4.0 },
     { name: 'Ralph', short: 'R', salary: 16000, myTargetSalary: 0, order: 50 },
     { name: 'Josh', short: 'JS', salary: 13000, myTargetSalary: 0, order: 40 },
     { name: 'Sandy', short: 'S', salary: 20000, myTargetSalary: 0, order: 20 },
@@ -15,7 +15,7 @@ var s = {
   salaryIncrease: 8000,
 
   maxOrder: 100,
-  minSalary: 10000, maxSalary: 30000,
+  minSalary: 7000, maxSalary: 30000,
 
   width:  1100,
   height: 550,
@@ -26,6 +26,11 @@ var s = {
 
   splitMaxSalary: 25000,
   splitMinSalary: 12000,
+}
+
+function scaledSalary(d) {
+  var dailyHours = d.dailyHours || 8.0;
+  return d.salary * 8.0 / dailyHours;
 }
 
 _.each(s.data, function(d) {
@@ -72,6 +77,12 @@ var refLines = svg.append("g").attr("class", "ref-lines")
   .selectAll("line")
   .data(d3.keys(s.refLines))
   .enter().append("line");
+
+var selectionScaledSalary = svg.append("g").attr("class", "data-scaled-salary")
+  .selectAll("circle")
+  .data(s.data)
+  .enter().append("circle")
+  .attr("r", 5);
 
 var selectionSalary = svg.append("g").attr("class", "data-salary")
   .selectAll("circle")
@@ -294,6 +305,10 @@ function updateGraph() {
     .attr("cy", µ('salary', salaryScale))
     .attr("cx", µ('order', orderScale));
 
+  selectionScaledSalary
+    .attr("cy", function(d) { return salaryScale(scaledSalary(d)); })
+    .attr("cx", µ('order', orderScale));
+
   selectionNames
     .attr("y", function(d){ return salaryScale(d.salary) + 20; })
     .attr("x", µ('order', orderScale));
@@ -320,3 +335,6 @@ function renderStatus() {
 }
 
 updateGraph();
+
+
+new Clipboard('#copy-status');
