@@ -35,6 +35,17 @@
       </div>
 
       <div>
+        <div id="gapStatus" class="panel panel-default">
+          <table class="table">
+            <tr class="header">
+              <th>Goal</th>
+            </tr>
+            <tr class="values">
+              <td id="targetSalaryGap"></td>
+            </tr>
+          </table>
+        </div>
+
         <ul class="nav nav-tabs">
           <li class="active"><a href="#main" data-toggle="tab">Main</a></li>
           <li><a href="#split" data-toggle="tab">Split</a></li>
@@ -46,11 +57,6 @@
           <div class="tab-pane active" id="main">
             <svg id="main-chart">
             </svg>
-
-            <dl>
-              <dt>Target salary gap:</dt>
-              <dd id="targetSalaryGap"></dd>
-            </dl>
           </div>
 
           <div class="tab-pane" id="split">

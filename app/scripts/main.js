@@ -1,9 +1,9 @@
 var s = {
   data: [
-    { name: 'John', salary: 12000, myTargetSalary: 0, order: 70 },
-    { name: 'Ralph', salary: 16000, myTargetSalary: 0, order: 50 },
-    { name: 'Josh', salary: 13000, myTargetSalary: 0, order: 40 },
-    { name: 'Sandy', salary: 20000, myTargetSalary: 0, order: 20 },
+    { name: 'John', short: 'JN', salary: 12000, myTargetSalary: 0, order: 70 },
+    { name: 'Ralph', short: 'R', salary: 16000, myTargetSalary: 0, order: 50 },
+    { name: 'Josh', short: 'JS', salary: 13000, myTargetSalary: 0, order: 40 },
+    { name: 'Sandy', short: 'S', salary: 20000, myTargetSalary: 0, order: 20 },
   ],
 
   refLines: {
@@ -33,13 +33,8 @@ _.each(s.data, function(d) {
     d.assignment = [];
     d.roundResult = [];
     _.each(s.progress, function() {
-      if (d.name == 'John') {
-        d.assignment.push(0);
-        d.roundResult.push(0);
-      } else {
-        d.assignment.push(Math.round(Math.random() * 200));
-        d.roundResult.push(Math.round(Math.random() * 200));
-      }
+      d.assignment.push(0);
+      d.roundResult.push(0);
     });
   }
 });
@@ -85,8 +80,15 @@ var selectionSalary = svg.append("g").attr("class", "data-salary")
   .attr("r", 5)
   .call(d3.behavior.drag().on("drag", function(d) {
     d.order = Math.round(orderScale.invert(d3.event.x));
+    setMyTargetSalary(d, buildSalaryOrderScale()(d.order));
     updateGraph();
   }));
+
+var selectionNames = svg.append("g").attr("class", "data-name")
+  .selectAll("text")
+  .data(s.data)
+  .enter().append("text")
+  .text(function(d) { return d.short; });
 
 var selectionMyTargetSalary = svg.append("g").attr("class", "data-my-target-salary")
   .selectAll("circle")
@@ -112,15 +114,39 @@ var refLineMyTargetSalary = svg.append("g").attr("class", "ref-line-my-target-sa
     updateGraph();
   }));
 
-function updateMyTargetSalaryFromLine() {
-  var m = d3.scale.linear()
+function buildSalaryOrderScale() {
+  return d3.scale.linear()
     .domain([s.refLines.myTargetSalary[0].x, s.refLines.myTargetSalary[1].x])
     .range([s.refLines.myTargetSalary[0].y, s.refLines.myTargetSalary[1].y]);
+}
+
+function updateMyTargetSalaryFromLine() {
+  var m = buildSalaryOrderScale();
 
   _.each(s.data, function(d) {
     setMyTargetSalary(d, m(d.order));
   });
 }
+
+
+var progressGaps = [];
+_.each(s.progress, function(d, i) {
+  var td = $("<td>");
+  progressGaps.push(td);
+  $("#gapStatus .values").append(td);
+  $("#gapStatus .header").append($("<th>").text("A" + (i+1)));
+});
+
+function updateProgressGaps() {
+  _.each(s.progress, function(p, i){
+    var gap = s.progress[i] * s.salaryIncrease;
+    _.each(s.data, function(d) {
+      gap -= d.assignment[i];
+    });
+    progressGaps[i].text(gap);
+  });
+}
+
 
 var names = _.map(s.data, 'name');
 
@@ -149,11 +175,11 @@ _.each(names, function(name) {
     var roundResultControl = $("<input>").attr("type", "number").addClass("form-control");
 
     assignmentControl.change(function(){
-      obj.data.assignment[i] = parseInt(assignmentControl.val());
+      obj.data.assignment[i] = Math.max(0, parseInt(assignmentControl.val()));
       updateGraph();
     });
     roundResultControl.change(function(){
-      obj.data.roundResult[i] = parseInt(roundResultControl.val());
+      obj.data.roundResult[i] = Math.max(0, parseInt(roundResultControl.val()));
       updateGraph();
     });
 
@@ -210,7 +236,7 @@ _.each(_.chunk(names, s.splitRowCount), function(rowNames) {
       .enter().append("circle").attr("r", 5)
       .attr("cx", function(d, i) { return splitProgressScale(_.sum(_.slice(s.progress, 0, i+1))); })
       .call(d3.behavior.drag().on("drag", function(d, i) {
-        obj.data.assignment[i] = Math.round(obj.splitSalaryScale.invert(d3.event.y)) - obj.baseSalaryForAssignment(obj.data, i);
+        obj.data.assignment[i] = Math.max(0, Math.round(obj.splitSalaryScale.invert(d3.event.y)) - obj.baseSalaryForAssignment(obj.data, i));
         updateGraph();
       }));
 
@@ -256,6 +282,8 @@ _.each(_.chunk(names, s.splitRowCount), function(rowNames) {
 function updateGraph() {
   renderStatus();
 
+  updateProgressGaps();
+
   refLines
     .attr("x1", function(d){ return orderScale(s.refLines[d][0].x) } )
     .attr("y1", function(d){ return salaryScale(s.refLines[d][0].y) } )
@@ -265,6 +293,10 @@ function updateGraph() {
   selectionSalary
     .attr("cy", µ('salary', salaryScale))
     .attr("cx", µ('order', orderScale));
+
+  selectionNames
+    .attr("y", function(d){ return salaryScale(d.salary) + 20; })
+    .attr("x", µ('order', orderScale));
 
   selectionMyTargetSalary
     .attr("cy", µ('myTargetSalary', salaryScale))
