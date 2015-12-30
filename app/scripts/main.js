@@ -338,3 +338,26 @@ updateGraph();
 
 
 new Clipboard('#copy-status');
+
+function handleInputFiles(files) {
+  if (files.length != 1) return;
+  var file = files[0];
+  var reader = new FileReader();
+  reader.onload = function(evt) {
+    roundResults = JSON.parse(evt.target.result);
+    _.each(s.data, function(d) {
+      _.each(s.progress, function(_,i) {
+        if (i < roundResults[d.name].length) {
+          d.roundResult[i] = roundResults[d.name][i];
+        } else {
+          d.roundResult[i] = 0;
+        }
+      });
+    });
+
+    updateGraph();
+
+    alert('imported!');
+  };
+  reader.readAsText(file);
+}
