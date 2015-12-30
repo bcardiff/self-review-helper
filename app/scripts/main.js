@@ -28,9 +28,22 @@ var s = {
   splitMinSalary: 12000,
 }
 
-function scaledSalary(d) {
+function dailyHoursScaled(d, v) {
   var dailyHours = d.dailyHours || 8.0;
-  return d.salary * 8.0 / dailyHours;
+  return v * 8.0 / dailyHours;
+}
+
+function invertDailyHoursScaled(d, v) {
+  var dailyHours = d.dailyHours || 8.0;
+  return v * dailyHours / 8.0;
+}
+
+function scaledSalary(d) {
+  return dailyHoursScaled(d, d.salary);
+}
+
+function scaledTargetSalary(d) {
+  return dailyHoursScaled(d, d.myTargetSalary);
 }
 
 _.each(s.data, function(d) {
@@ -84,6 +97,12 @@ var selectionScaledSalary = svg.append("g").attr("class", "data-scaled-salary")
   .enter().append("circle")
   .attr("r", 5);
 
+var selectionScaledTargetSalary = svg.append("g").attr("class", "data-scaled-target-salary")
+  .selectAll("circle")
+  .data(s.data)
+  .enter().append("circle")
+  .attr("r", 5);
+
 var selectionSalary = svg.append("g").attr("class", "data-salary")
   .selectAll("circle")
   .data(s.data)
@@ -91,7 +110,7 @@ var selectionSalary = svg.append("g").attr("class", "data-salary")
   .attr("r", 5)
   .call(d3.behavior.drag().on("drag", function(d) {
     d.order = Math.round(orderScale.invert(d3.event.x));
-    setMyTargetSalary(d, buildSalaryOrderScale()(d.order));
+    setMyTargetSalary(d, invertDailyHoursScaled(d, buildSalaryOrderScale()(d.order)));
     updateGraph();
   }));
 
@@ -135,7 +154,7 @@ function updateMyTargetSalaryFromLine() {
   var m = buildSalaryOrderScale();
 
   _.each(s.data, function(d) {
-    setMyTargetSalary(d, m(d.order));
+    setMyTargetSalary(d, invertDailyHoursScaled(d, m(d.order)));
   });
 }
 
@@ -307,6 +326,10 @@ function updateGraph() {
 
   selectionScaledSalary
     .attr("cy", function(d) { return salaryScale(scaledSalary(d)); })
+    .attr("cx", µ('order', orderScale));
+
+  selectionScaledTargetSalary
+    .attr("cy", function(d) { return salaryScale(scaledTargetSalary(d)); })
     .attr("cx", µ('order', orderScale));
 
   selectionNames
