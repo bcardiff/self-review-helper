@@ -1,32 +1,10 @@
-var s = {
-  data: [
-    { name: 'John', short: 'JN', salary:  8000, myTargetSalary: 0, order: 70, dailyHours: 4.0 },
-    { name: 'Ralph', short: 'R', salary: 16000, myTargetSalary: 0, order: 50 },
-    { name: 'Josh', short: 'JS', salary: 13000, myTargetSalary: 0, order: 40 },
-    { name: 'Sandy', short: 'S', salary: 20000, myTargetSalary: 0, order: 20 },
-  ],
-
-  refLines: {
-    myTargetSalary: [{x:0,y:28000},{x:90,y:10000}],
-  },
-
-  progress: [.2, .3, .4, .1],
-
-  salaryIncrease: 8000,
-
-  maxOrder: 100,
-  minSalary: 7000, maxSalary: 30000,
-
-  width:  1100,
-  height: 550,
-
-  splitHeight: 250,
-  splitWidth:  400,
-  splitRowCount: 3,
-
-  splitMaxSalary: 25000,
-  splitMinSalary: 12000,
-}
+import React, { Component } from 'react';
+import './App.scss';
+import $ from 'jquery';
+import { s } from './state.js';
+import _ from 'lodash';
+import d3 from 'd3';
+import Clipboard from 'clipboard';
 
 function dailyHoursScaled(d, v) {
   var dailyHours = d.dailyHours || 8.0;
@@ -72,7 +50,9 @@ function setMyTargetSalary(d, v) {
   d.myTargetSalary = Math.max(Math.round(v), d.salary);
 }
 
-svg = d3.select("#main-chart");
+function initApp() {
+
+let svg = d3.select("#main-chart");
 svg.attr("width", s.width).attr("height", s.height);
 
 var orderScale = d3.scale.linear().domain([0, s.maxOrder]).range([m[3], s.width - m[1]]);
@@ -366,7 +346,7 @@ function updateGraph() {
 }
 
 function renderStatus() {
-  $('#status').text(JSON.stringify(s, null, 2));
+  $('#status').val(JSON.stringify(s, null, 2));
 
   $('#targetSalaryGap').text(s.salaryIncrease - (_.sum(s.data, 'myTargetSalary') - _.sum(s.data, 'salary')));
 }
@@ -377,11 +357,11 @@ updateGraph();
 new Clipboard('#copy-status');
 
 function handleInputFiles(files) {
-  if (files.length != 1) return;
-  var file = files[0];
-  var reader = new FileReader();
+  if (files.length !== 1) return;
+  let file = files[0];
+  let reader = new FileReader();
   reader.onload = function(evt) {
-    roundResults = JSON.parse(evt.target.result);
+    let roundResults = JSON.parse(evt.target.result);
     _.each(s.data, function(d) {
       _.each(s.progress, function(_,i) {
         if (i < roundResults[d.name].length) {
@@ -398,3 +378,78 @@ function handleInputFiles(files) {
   };
   reader.readAsText(file);
 }
+
+window.handleInputFiles = handleInputFiles;
+
+}
+
+class App extends Component {
+  componentDidMount() {
+    initApp();
+  }
+
+  render() {
+    return (
+      <div className="container-fluid">
+        <div className="header">
+          <h3 className="text-muted">Review helper</h3>
+        </div>
+
+        <div>
+          <div id="gapStatus" className="panel panel-default">
+            <table className="table">
+              <thead>
+                <tr className="header">
+                  <th>Goal</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="values">
+                  <td id="targetSalaryGap"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <ul className="nav nav-tabs">
+            <li className="active"><a href="#main" data-toggle="tab">Main</a></li>
+            <li><a href="#split" data-toggle="tab">Split</a></li>
+            <li><a href="#table" data-toggle="tab">Table</a></li>
+            <li><a href="#state" data-toggle="tab">State</a></li>
+          </ul>
+
+          <div className="tab-content">
+            <div className="tab-pane active" id="main">
+              <svg id="main-chart">
+              </svg>
+            </div>
+
+            <div className="tab-pane" id="split">
+            </div>
+
+            <div className="tab-pane" id="table">
+              <br/>
+              <table className="table table-striped">
+              </table>
+            </div>
+
+            <div className="tab-pane" id="state">
+              <br/>
+              <input type="file" onChange={(e) => window.handleInputFiles(e.target.files)} />
+
+              <br/>
+              <button className="btn btn-default" id="copy-status" data-clipboard-target="#status"> Copy to clipboard </button>
+
+              <br/>
+              <br/>
+
+              <textarea id="status"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+}
+
+export default App;
